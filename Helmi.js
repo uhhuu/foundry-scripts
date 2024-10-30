@@ -72,13 +72,14 @@ async function main() {
     { name: "Control Weather", skillDC: 16, song: 'Ravel "Bolero"', overrideLevel: 1, overrideScalingMode: "level" },
     { name: "Disguise Self", skillDC: 14, song: 'F. Mercury "The Great Pretender"' },
     { name: "Healing Word", skillDC: 20, song: 'Marvin Gaye "Sexual Healing"' },
+    { name: "Invisibility", skillDC: 20, song: 'Freddie Mercury "The Invisible Man"' },
     { name: "Locate Object", skillDC: 16, song: 'Jaan Tätte "Silveri laul"' },
     { name: "Motivational Speech", skillDC: 10, song: 'Bob Marley "Get Up, Stand Up"', overrideScalingMode: "level" },
     { name: "Prayer of Healing", skillDC: 18, song: 'R.E.M "Everybody hurts"' },
     { name: "Protection from Evil and Good ", skillDC: 20, song: '"Amazing Grace"' },
     { name: "Seeming", skillDC: 16, song: 'Apelsin "Illusioon"' },
     { name: "Speak with Dead", skillDC: 14, song: 'Cranberries "Zombie"' },
-    { name: "Tiny Hut", skillDC: 14, song: 'Lastelaul "Ehitame Maja"' }
+    { name: "Tiny Hut", skillDC: 14, song: 'Lastelaul "Ehitame Maja"' },
   ];
   // which skill to use for skillcheck (as in actor.system.skills)
   const sSkill = "prf"
@@ -278,7 +279,7 @@ async function main() {
   let nResult = oRoll.total;
 
   let sSkillCheckHtml = `<p>Attempting to use <strong>${sItemName}</strong> (${nChargesLeft}/${nChargesMax} charges) to cast spell <strong>${sSpellChoice}</strong> at level ${nSpellLvl}.<p>Making a ${sSkillDescr} skill check with a bonus of +${nBonus}` + (nAdvantage === 0 ? "" : " with " + (nAdvantage < 0 ? "dis" : "") + "advantage") + (bGuidanceActive ? " and guidance" : "") + `. Rolling ${sRoll}</p>`;
-  chatMessage(sSkillCheckHtml);
+  await chatMessage(sSkillCheckHtml);
   const speaker = ChatMessage.implementation.getSpeaker({ actor: actor });
   if (bOutputChat)
     await oRoll.toMessage({
@@ -290,7 +291,7 @@ async function main() {
 
   // determine if the roll succeeds or not
   let bSkillSuccess = (nResult >= nSkillDC);
-  chatMessage(`<p>With a ${sSkillDescr} roll of ${nResult} against DC${nSkillDC}, the attempt was <strong>` + (bSkillSuccess ? "" : "un") + `successful</strong></p>`);
+  await chatMessage(`<p>With a ${sSkillDescr} roll of ${nResult} against DC${nSkillDC}, the attempt was <strong>` + (bSkillSuccess ? "" : "un") + `successful</strong></p>`);
 
   if (!bSkillSuccess) {
     // use lucky feat, if so decided
@@ -299,7 +300,7 @@ async function main() {
       if (bUseResources)
         await oLucky.update({ "system.uses.value": nLuckyLeft - 1 })
 
-      chatMessage(`<p>However, ${sActorName} tries again, using the Lucky feat (${nLuckyLeft - 1} uses remaining after this)</p>`);
+      await chatMessage(`<p>However, ${sActorName} tries again, using the Lucky feat (${nLuckyLeft - 1} uses remaining after this)</p>`);
       oRoll = new Roll(sRoll).evaluate({ async: false });
       nResult = oRoll.total;
       if (bOutputChat)
@@ -310,14 +311,14 @@ async function main() {
       else
         console.log(oRoll);
       bSkillSuccess = (nResult >= nSkillDC);  // the final skill success/failure based on lucky roll
-      chatMessage(`<p>With a new roll of ${nResult} against DC${nSkillDC}, the new attempt was ` + (bSkillSuccess ? "a great <strong>success</strong> !" : "unfortunately still <strong>unsuccessful</strong></p>"));
+      await chatMessage(`<p>With a new roll of ${nResult} against DC${nSkillDC}, the new attempt was ` + (bSkillSuccess ? "a great <strong>success</strong> !" : "unfortunately still <strong>unsuccessful</strong></p>"));
     }
   }
 
   // if the skillcheck was successful, output spell info
   if (bSkillSuccess) {
-    chatMessage(`<p>${sActorName} uses ${sItemName} to cast ${sSpellChoice} at level ${nSpellLvl}. The spell lasts for ${oSpell.spellobject.labels.duration}.</p>`);
-    chatMessage(oSpell.spellobject.system.description.value);
+    await chatMessage(`<p>${sActorName} uses ${sItemName} to cast ${sSpellChoice} at level ${nSpellLvl}. The spell lasts for ${oSpell.spellobject.labels.duration}.</p>`);
+    await chatMessage(oSpell.spellobject.system.description.value);
   }
 
   // do any spell-specific stuff, if needed (e.g aid - choose random aTargets, display hp bonus)

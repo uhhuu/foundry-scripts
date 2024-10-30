@@ -207,5 +207,5 @@ async function main() {
         content: sOutputHtml
     };
 
-    ChatMessage.create(chatData, {});
+    await ChatMessage.create(chatData, {});
 }
