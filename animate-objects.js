@@ -5,6 +5,15 @@
  * makes rolls for attacks and damage
  * displays the result in a neat table
  * calculates and displays hits and total damage, based on the AC of selected target
+ * 
+ * Ideas for future: Pivot from simple animated objects attacks into a full-featured AOMS (Animated Objects Management System)
+ *      - tracking of objects throughout their whole short but exciting life:
+ *          - creating of any number (within limits set by the spell) of different size objects
+ *          - reducing of objects' HP (must be able to target specific objects)
+ *          - making saving throws (for selected objects)
+ *          - skill checks? (lower prio)
+ *          - attacks by a selection of objects (that can be of different sizes)
+ *          - tracking objects locations(?)
  **/
 
 // Call function main
@@ -49,6 +58,8 @@ async function main() {
             ${oObject.size} (HP${oObject.hp} AC${oObject.ac} Atk:1d20+${oObject.attackBonus} Dmg:${oObject.damageDice}${(oObject.damageBonus > 0 ? "+" : "")}${oObject.damageBonus})
         </option>
         `, "");
+    
+    // Dropdown to choose objects' size
     const sSizeDropdownHtml = `
       <div class="form-group">
         <label>Size of objects:</label>
@@ -56,8 +67,9 @@ async function main() {
           <select name="objectSize">${sSizeChoicesHtml}</select>
         </div>
       </div>
-      `; // Dropdown to choose objects' size
+      `; 
 
+    // Dropdown to choose number of objects - will be populated by a later function, that runs when size of objects is selected
     let sCountDropdownHtml = `
       <div class="form-group">
         <label>Number of objects:</label>
@@ -65,8 +77,9 @@ async function main() {
           <select name="objectCount"></select>
         </div>
       </div>
-      `; // Dropdown to choose number of objects
+      `; 
 
+    // Advantage/disadvantage choice
     let sAdvantageChoiceHtml = `
       <div class="form-group">
         <label>(Dis-)advantage?</label>
@@ -78,9 +91,9 @@ async function main() {
           </select>
         </div>
       </div>
-      `; // Advantage/disadvantage choice
+      `; 
 
-    // use onRender to set event listener to update number of objects choices when objects' size changes
+    // use onRender to 1) populate initial dropdown for object count and 2) set event listener to update number of objects choices when objects' size changes
     function onRender([html]) {
         const objectSize = html.querySelector("select[name=objectSize]");
         const objectCount = html.querySelector("select[name=objectCount]");
@@ -116,7 +129,7 @@ async function main() {
     console.log(oObject);
     console.log(`Object size: ${oObject.size} Count: ${nObjectCount}  Advantage: ${nAdvantage}`);
 
-    // start creating output to chat message - general info about the attacking objects and table header
+    // start creating output for chat message - general info about the attacking objects and table header
     sOutputHtml = `
         <p><strong>Animated Objects Attack!</strong></p>
         <p>Making <strong>${nObjectCount} ${oObject.size}</strong> object attacks${(nAdvantage === 0 ? "" : " <strong>with " + (nAdvantage < 0 ? "dis" : "") + "advantage</strong>")}
