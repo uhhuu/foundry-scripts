@@ -32,7 +32,16 @@
  * 
  * 6.   lisa väljundi algusse info ka selle kohta, kas rünnakud tehti advantage või disadvantage'ga
  * 
- * 7.   väga hea tulemus, aitäh, musi!
+ * 7.   palun kontrolli kriitilise tabamuse puhul vigastus üle - siis peaks ainult täringute vigastus minema topelt, 
+ *      aga mulle tundub, et su koodis läheb topelt ka boonus (mis ei peaks topelt minema), ühtlasi palun pane 
+ *      väljundisse kirja, millest täpselt vigastus koosneb, täringuveeretus(ed) + boonus
+ * 
+ * 8.   muuda seda nii, et crit tabamuse puhul näidatakse vigastuste tulemustes mõlemat täringu veeretust 
+ *      (näiteks 2+3+ boonus)
+ * 
+ * 9.   Palun lisa tulemuste kokkuvõttesse ka, kui palju oli kõikide vigastuste summa
+ * 
+ * ...   väga hea tulemus, aitäh, musi!
  * 
  *      ChatGPT
  *      Thought for 5 seconds
@@ -40,237 +49,266 @@
  */
 
 (async () => {
-    // Kontrolli, kas on valitud sihtmärk
-    if (game.user.targets.size === 0) {
-      ui.notifications.warn("Palun vali sihtmärk.");
-      return;
+  // Kontrolli, kas on valitud sihtmärk
+  if (game.user.targets.size === 0) {
+    ui.notifications.warn("Palun vali sihtmärk.");
+    return;
+  }
+
+  // Võta esimene sihitud token
+  let target = game.user.targets.values().next().value;
+  let targetActor = target.actor;
+
+  // Saa sihtmärgi AC ja HP
+  let targetAC = targetActor.system.attributes.ac.value;
+  let targetHP = targetActor.system.attributes.hp.value;
+
+  // Objektide suurused ja nende andmed vastavalt loitsule "Animate Objects"
+  const objectData = {
+    "Tiny": {attackBonus: 8, damageDice: "1d4+4", maxObjects: 10, objectCost: 1},
+    "Small": {attackBonus: 6, damageDice: "1d8+2", maxObjects: 10, objectCost: 1},
+    "Medium": {attackBonus: 5, damageDice: "2d6+1", maxObjects: 5, objectCost: 2},
+    "Large": {attackBonus: 6, damageDice: "2d10+2", maxObjects: 2, objectCost: 4},
+    "Huge": {attackBonus: 8, damageDice: "2d12+4", maxObjects: 1, objectCost: 8}
+  };
+
+  // Funktsioon objektide arvu valiku loomiseks
+  function createQuantityOptions(max) {
+    let options = '';
+    for (let i = 1; i <= max; i++) {
+      options += `<option value="${i}">${i}</option>`;
     }
-  
-    // Võta esimene sihitud token
-    let target = game.user.targets.values().next().value;
-    let targetActor = target.actor;
-  
-    // Saa sihtmärgi AC ja HP
-    let targetAC = targetActor.system.attributes.ac.value;
-    let targetHP = targetActor.system.attributes.hp.value;
-  
-    // Objektide suurused ja nende andmed vastavalt loitsule "Animate Objects"
-    const objectData = {
-      "Tiny": {attackBonus: 8, damageDice: "1d4+4", maxObjects: 10, objectCost: 1},
-      "Small": {attackBonus: 6, damageDice: "1d8+2", maxObjects: 10, objectCost: 1},
-      "Medium": {attackBonus: 5, damageDice: "2d6+1", maxObjects: 5, objectCost: 2},
-      "Large": {attackBonus: 6, damageDice: "2d10+2", maxObjects: 2, objectCost: 4},
-      "Huge": {attackBonus: 8, damageDice: "2d12+4", maxObjects: 1, objectCost: 8}
-    };
-  
-    // Funktsioon objektide arvu valiku loomiseks
-    function createQuantityOptions(max) {
-      let options = '';
-      for (let i = 1; i <= max; i++) {
-        options += `<option value="${i}">${i}</option>`;
-      }
-      return options;
+    return options;
+  }
+
+  // Funktsioon damageDice parsimiseks
+  function parseDamageDice(damageDice) {
+    let regex = /(\d+)d(\d+)(\+(\d+))?/;
+    let match = damageDice.match(regex);
+    if (!match) {
+      throw new Error("Vigane vigastuse täringu formaat");
     }
-  
-    // Dialoogivalikud
-    let dialogContent = `
-    <form>
-      <div class="form-group">
-        <label>Objekti suurus:</label>
-        <select id="size">
-          ${Object.keys(objectData).map(size => `<option value="${size}">${size}</option>`).join('')}
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Objektide arv:</label>
-        <select id="quantity">
-          ${createQuantityOptions(objectData["Tiny"].maxObjects)}
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Rünnaku tüüp:</label>
-        <select id="attackType">
-          <option value="normal">Tavaline</option>
-          <option value="advantage">Advantage</option>
-          <option value="disadvantage">Disadvantage</option>
-        </select>
-      </div>
-    </form>
-    `;
-  
-    let d = new Dialog({
-      title: "Animate Objects Rünnak",
-      content: dialogContent,
-      render: html => {
-        // Uuenda objektide arvu valik vastavalt valitud suurusele
-        html.find("#size").change(event => {
-          let size = event.target.value;
-          let maxObjects = objectData[size].maxObjects;
-          let quantitySelect = html.find("#quantity");
-          quantitySelect.empty();
-          quantitySelect.append(createQuantityOptions(maxObjects));
-        });
-      },
-      buttons: {
-        ok: {
-          label: "Rünnak!",
-          callback: async (html) => {
-            let size = html.find("#size").val();
-            let quantity = parseInt(html.find("#quantity").val());
-            let attackType = html.find("#attackType").val();
-  
-            let data = objectData[size];
-  
-            let attackBonus = data.attackBonus;
-            let damageDice = data.damageDice;
-            let objectCost = data.objectCost;
-            let totalObjectCost = quantity * objectCost;
-  
-            if (totalObjectCost > 10) {
-              ui.notifications.warn(`Valitud objektide arv ületab maksimaalse lubatud objektide kogumaksumuse (10).`);
-              return;
-            }
-  
-            let results = [];
-            let hits = 0;
-            let critHits = 0;
-            let misses = 0;
-            let critMisses = 0;
-  
-            for (let i = 1; i <= quantity; i++) {
-              // Veeretage rünnak
-              let rollFormula = "1d20";
-              if (attackType === "advantage") {
-                rollFormula = "2d20kh1";
-              } else if (attackType === "disadvantage") {
-                rollFormula = "2d20kl1";
-              }
-              let attackRoll = await new Roll(rollFormula).roll({async: true});
-              let dieValues = attackRoll.dice[0].results.map(die => die.result);
-              let dieValue = attackRoll.dice[0].total; // Valitud veeretus pärast advantage/disadvantage
-  
-              let totalAttack = dieValue + attackBonus;
-  
-              let hit = false;
-              let critHit = false;
-              let critMiss = false;
-              let tabamusText = "";
-  
-              if (dieValue === 1) {
-                critMiss = true;
-                misses++;
-                critMisses++;
-                tabamusText = "perse";
-              } else if (dieValue === 20) {
-                critHit = true;
-                hits++;
-                critHits++;
-                hit = true;
-                tabamusText = "crit";
-              } else if (totalAttack >= targetAC) {
-                hits++;
-                hit = true;
-                tabamusText = "Tabab";
-              } else {
-                misses++;
-                tabamusText = "Mööda";
-              }
-  
-              // Arvuta vigastus
-              let damageRollFormula = damageDice;
-              if (critHit) {
-                damageRollFormula += " + " + damageDice;
-              }
-              let damageRoll = await new Roll(damageRollFormula).roll({async: true});
-              let damageTotal = damageRoll.total;
-  
-              // Lisa tulemus
-              results.push({
-                dieValues: dieValues,
-                dieValue: dieValue,
-                attackRoll: attackRoll,
-                totalAttack: totalAttack,
-                hit: hit,
-                critHit: critHit,
-                critMiss: critMiss,
-                damageRoll: damageRoll,
-                damageTotal: damageTotal,
-                tabamusText: tabamusText
-              });
-            }
-  
-            // Määratle rünnaku tüüp tekstina
-            let attackTypeText = "";
-            if (attackType === "normal") {
-              attackTypeText = "Tavaline rünnak";
-            } else if (attackType === "advantage") {
-              attackTypeText = "Rünnak advantage'ga";
-            } else if (attackType === "disadvantage") {
-              attackTypeText = "Rünnak disadvantage'ga";
-            }
-  
-            // Koosta tulemuste tabel
-            let resultContent = `
-            <p><b>${attackTypeText}</b></p>
-            <p><b>Rünnak:</b> ${quantity} x ${size} objekt${quantity > 1 ? 'i' : ''}</p>
-            <p><b>Rünnaku boonus:</b> +${attackBonus}</p>
-            <p><b>Vigastuse täring:</b> ${damageDice}</p>
-            <p><b>Sihtmärk:</b> ${targetActor.name}</p>
-            <p><b>Turviseklass (AC):</b> ${targetAC}</p>
-            <p><b>Elupunktid (HP):</b> ${targetHP}</p>
-            <table border="1" cellspacing="0" cellpadding="4">
-              <tr>
-                <th>Objekt</th>
-                <th>Rünnak</th>
-                <th>Tabamus</th>
-                <th>Vigastus</th>
-              </tr>
-            `;
-            results.forEach((res, index) => {
-              let attackColor = res.hit ? "green" : (res.critMiss ? "red" : "black");
-              let damageColor = res.critHit ? "green" : "black";
-              let attackRollDisplay = '';
-  
-              if (attackType === "normal") {
-                attackRollDisplay = `${res.dieValue} + ${attackBonus} = ${res.totalAttack}`;
-              } else {
-                attackRollDisplay = `(${res.dieValues.join(', ')}) + ${attackBonus} = ${res.totalAttack}`;
-              }
-  
-              if (res.critMiss) {
-                attackRollDisplay = `<span style="color:red;">${attackRollDisplay}</span>`;
-              } else if (res.critHit) {
-                attackRollDisplay = `<span style="color:green;">${attackRollDisplay}</span>`;
-              }
-  
-              resultContent += `
-              <tr>
-                <td>${index + 1}</td>
-                <td>${attackRollDisplay}</td>
-                <td><span style="color:${attackColor};">${res.tabamusText}</span></td>
-                <td><span style="color:${damageColor};">${res.hit ? res.damageTotal : "-"}</span></td>
-              </tr>
-              `;
-            });
-            resultContent += `</table>`;
-  
-            // Lisa kokkuvõte
-            resultContent += `
-            <p><b>Kokkuvõte:</b></p>
-            <p>Tabamusi: ${hits} (sh kriitilisi tabamusi: ${critHits})</p>
-            <p>Möödalaskmisi: ${misses} (sh kriitilisi möödalaskmisi: ${critMisses})</p>
-            `;
-  
-            // Saada sõnum chat-i
-            ChatMessage.create({content: resultContent});
+    let numDice = parseInt(match[1]);
+    let diceSides = parseInt(match[2]);
+    let bonus = match[4] ? parseInt(match[4]) : 0;
+    return { numDice, diceSides, bonus };
+  }
+
+  // Dialoogivalikud
+  let dialogContent = `
+  <form>
+    <div class="form-group">
+      <label>Objekti suurus:</label>
+      <select id="size">
+        ${Object.keys(objectData).map(size => `<option value="${size}">${size}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Objektide arv:</label>
+      <select id="quantity">
+        ${createQuantityOptions(objectData["Tiny"].maxObjects)}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Rünnaku tüüp:</label>
+      <select id="attackType">
+        <option value="normal">Tavaline</option>
+        <option value="advantage">Advantage</option>
+        <option value="disadvantage">Disadvantage</option>
+      </select>
+    </div>
+  </form>
+  `;
+
+  let d = new Dialog({
+    title: "Animate Objects Rünnak",
+    content: dialogContent,
+    render: html => {
+      // Uuenda objektide arvu valik vastavalt valitud suurusele
+      html.find("#size").change(event => {
+        let size = event.target.value;
+        let maxObjects = objectData[size].maxObjects;
+        let quantitySelect = html.find("#quantity");
+        quantitySelect.empty();
+        quantitySelect.append(createQuantityOptions(maxObjects));
+      });
+    },
+    buttons: {
+      ok: {
+        label: "Rünnak!",
+        callback: async (html) => {
+          let size = html.find("#size").val();
+          let quantity = parseInt(html.find("#quantity").val());
+          let attackType = html.find("#attackType").val();
+
+          let data = objectData[size];
+
+          let attackBonus = data.attackBonus;
+          let damageDice = data.damageDice;
+          let objectCost = data.objectCost;
+          let totalObjectCost = quantity * objectCost;
+
+          if (totalObjectCost > 10) {
+            ui.notifications.warn(`Valitud objektide arv ületab maksimaalse lubatud objektide kogumaksumuse (10).`);
+            return;
           }
-        },
-        cancel: {
-          label: "Tühista"
+
+          let results = [];
+          let hits = 0;
+          let critHits = 0;
+          let misses = 0;
+          let critMisses = 0;
+          let totalDamage = 0; // Lisatud koguvigastuse muutujana
+
+          // Parsime damageDice
+          let { numDice, diceSides, bonus } = parseDamageDice(damageDice);
+
+          for (let i = 1; i <= quantity; i++) {
+            // Veeretage rünnak
+            let rollFormula = "1d20";
+            if (attackType === "advantage") {
+              rollFormula = "2d20kh1";
+            } else if (attackType === "disadvantage") {
+              rollFormula = "2d20kl1";
+            }
+            let attackRoll = await new Roll(rollFormula).roll({async: true});
+            let dieValues = attackRoll.dice[0].results.map(die => die.result);
+            let dieValue = attackRoll.dice[0].total; // Valitud veeretus pärast advantage/disadvantage
+
+            let totalAttack = dieValue + attackBonus;
+
+            let hit = false;
+            let critHit = false;
+            let critMiss = false;
+            let tabamusText = "";
+
+            if (dieValue === 1) {
+              critMiss = true;
+              misses++;
+              critMisses++;
+              tabamusText = "perse";
+            } else if (dieValue === 20) {
+              critHit = true;
+              hits++;
+              critHits++;
+              hit = true;
+              tabamusText = "crit";
+            } else if (totalAttack >= targetAC) {
+              hits++;
+              hit = true;
+              tabamusText = "Tabab";
+            } else {
+              misses++;
+              tabamusText = "Mööda";
+            }
+
+            // Arvuta vigastus
+            let totalNumDice = numDice;
+            if (critHit) {
+              totalNumDice *= 2; // Topeldame ainult täringute arvu
+            }
+            let damageRollFormula = `${totalNumDice}d${diceSides}`;
+            let damageRoll = await new Roll(damageRollFormula).roll({async: true});
+            let damageTotal = damageRoll.total + bonus;
+
+            // Lisame koguvigastusele
+            if (hit) {
+              totalDamage += damageTotal;
+            }
+
+            // Koosta vigastuse üksikasjad
+            let damageDieValues = damageRoll.dice[0].results.map(die => die.result);
+            let damageDieString = damageDieValues.join(' + ');
+            let damageBreakdown = `${damageDieString} + ${bonus} = ${damageTotal}`;
+
+            // Lisa tulemus
+            results.push({
+              dieValues: dieValues,
+              dieValue: dieValue,
+              attackRoll: attackRoll,
+              totalAttack: totalAttack,
+              hit: hit,
+              critHit: critHit,
+              critMiss: critMiss,
+              damageRoll: damageRoll,
+              damageTotal: damageTotal,
+              tabamusText: tabamusText,
+              damageBreakdown: damageBreakdown
+            });
+          }
+
+          // Määratle rünnaku tüüp tekstina
+          let attackTypeText = "";
+          if (attackType === "normal") {
+            attackTypeText = "Tavaline rünnak";
+          } else if (attackType === "advantage") {
+            attackTypeText = "Rünnak advantage'ga";
+          } else if (attackType === "disadvantage") {
+            attackTypeText = "Rünnak disadvantage'ga";
+          }
+
+          // Koosta tulemuste tabel
+          let resultContent = `
+          <p><b>${attackTypeText}</b></p>
+          <p><b>Rünnak:</b> ${quantity} x ${size} objekt${quantity > 1 ? 'i' : ''}</p>
+          <p><b>Rünnaku boonus:</b> +${attackBonus}</p>
+          <p><b>Vigastuse täring:</b> ${damageDice}</p>
+          <p><b>Sihtmärk:</b> ${targetActor.name}</p>
+          <p><b>Turviseklass (AC):</b> ${targetAC}</p>
+          <p><b>Elupunktid (HP):</b> ${targetHP}</p>
+          <table border="1" cellspacing="0" cellpadding="4">
+            <tr>
+              <th>Objekt</th>
+              <th>Rünnak</th>
+              <th>Tabamus</th>
+              <th>Vigastus</th>
+            </tr>
+          `;
+          results.forEach((res, index) => {
+            let attackColor = res.hit ? "green" : (res.critMiss ? "red" : "black");
+            let damageColor = res.critHit ? "green" : "black";
+            let attackRollDisplay = '';
+
+            if (attackType === "normal") {
+              attackRollDisplay = `${res.dieValue} + ${attackBonus} = ${res.totalAttack}`;
+            } else {
+              attackRollDisplay = `(${res.dieValues.join(', ')}) + ${attackBonus} = ${res.totalAttack}`;
+            }
+
+            if (res.critMiss) {
+              attackRollDisplay = `<span style="color:red;">${attackRollDisplay}</span>`;
+            } else if (res.critHit) {
+              attackRollDisplay = `<span style="color:green;">${attackRollDisplay}</span>`;
+            }
+
+            resultContent += `
+            <tr>
+              <td>${index + 1}</td>
+              <td>${attackRollDisplay}</td>
+              <td><span style="color:${attackColor};">${res.tabamusText}</span></td>
+              <td><span style="color:${damageColor};">${res.hit ? res.damageBreakdown : "-"}</span></td>
+            </tr>
+            `;
+          });
+          resultContent += `</table>`;
+
+          // Lisa kokkuvõte
+          resultContent += `
+          <p><b>Kokkuvõte:</b></p>
+          <p>Tabamusi: ${hits} (sh kriitilisi tabamusi: ${critHits})</p>
+          <p>Möödalaskmisi: ${misses} (sh kriitilisi möödalaskmisi: ${critMisses})</p>
+          <p><b>Kõikide vigastuste summa:</b> ${totalDamage}</p>
+          `;
+
+          // Saada sõnum chat-i
+          ChatMessage.create({content: resultContent});
         }
       },
-      default: "ok"
-    });
-    d.render(true);
-  })();
-  
+      cancel: {
+        label: "Tühista"
+      }
+    },
+    default: "ok"
+  });
+  d.render(true);
+})();
