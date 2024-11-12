@@ -1,6 +1,6 @@
 /**
  * see skript on genereeritud chatgpt-ga, võttis paar iteratsiooni, et arendada, aga asja sai.
- * Promptid:
+ * Promptid (eelnevalt oli määratletud Foundry VTT kontekst ning chatgpt tegi lihtsa skripti valitud sihtmärgi AC ja HP kuvamiseks):
  * 1.   Ok nüüd tee keerulisem skript - 5e reeglite põhjal animated objects loitsu rünnak valitud sihtmärgi (target) vastu, 
  *      arvestades sihtmärgi ac-d, nii, et dialoogis saab kasutaja valida objektide suuruste vahel, objektide arvu 
  *      (maksimaalselt niipalju kui loitsu kirjelduse järgi vastava suurusega objekte saab luua), kas rünnak on tavaline, 
