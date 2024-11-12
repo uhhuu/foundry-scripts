@@ -72,7 +72,7 @@ async function main() {
     { name: "Control Weather", skillDC: 16, song: 'Ravel "Bolero"', overrideLevel: 1, overrideScalingMode: "level" },
     { name: "Disguise Self", skillDC: 14, song: 'F. Mercury "The Great Pretender"' },
     { name: "Healing Word", skillDC: 20, song: 'Marvin Gaye "Sexual Healing"' },
-    { name: "Invisibility", skillDC: 20, song: 'Freddie Mercury "The Invisible Man"' },
+    { name: "Invisibility", skillDC: 18, song: 'Freddie Mercury "The Invisible Man"' },
     { name: "Locate Object", skillDC: 16, song: 'Jaan Tätte "Silveri laul"' },
     { name: "Motivational Speech", skillDC: 10, song: 'Bob Marley "Get Up, Stand Up"', overrideScalingMode: "level" },
     { name: "Prayer of Healing", skillDC: 18, song: 'R.E.M "Everybody hurts"' },
