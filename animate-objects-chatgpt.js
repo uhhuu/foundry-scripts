@@ -1,6 +1,10 @@
 /**
- * see skript on genereeritud chatgpt-ga, võttis paar iteratsiooni, et arendada, aga asja sai.
+ * Foundry VTT, D&D 5e, animated objects rünnaku loits
+ * 
+ * See skript on genereeritud openAI chatGPT-ga (o1-preview, 13.11.2024), võttis paar iteratsiooni, et arendada, aga asja sai.
+ * 
  * Promptid (eelnevalt oli määratletud Foundry VTT kontekst ning chatgpt tegi lihtsa skripti valitud sihtmärgi AC ja HP kuvamiseks):
+ * 
  * 1.   Ok nüüd tee keerulisem skript - 5e reeglite põhjal animated objects loitsu rünnak valitud sihtmärgi (target) vastu, 
  *      arvestades sihtmärgi ac-d, nii, et dialoogis saab kasutaja valida objektide suuruste vahel, objektide arvu 
  *      (maksimaalselt niipalju kui loitsu kirjelduse järgi vastava suurusega objekte saab luua), kas rünnak on tavaline, 
@@ -10,18 +14,29 @@
  *      arvestades kriitilise tabamuse vigastuse reegleid), arvestades et rünnak läheb igal juhul mööda kui täringul 
  *      veeretati 1 (critical fail), tabeli lõpus kokkuvõte - kui palju rünnakuid tabas, nende hulgas kui palju oli 
  *      kriitilisi tabamusi ja kui palju läks mööda, nende hulgas kriitilisi möödaminemisi (täringul 1)
+ * 
  * 2.   Täienda skripti nii, et see väljastaks chatti ka sihtmärgi turviseklassi ja elupunktid ning tabamuse all 
  *      ütleks "crit" kui tabamus on crit hit (20) või "perse" kui tabamus on crit fail (1)
+ * 
  * 3.   Tundub ok, täienda skripti nii, et chati väljundi alguses oleks kirjas, mitu objekti, kui suured, ründavad 
  *      ning mis on nende rünnaku parameetrid (mis täringud, mis boonused on nii rünnakul kui vigastusel), ühtlasi 
  *      muuda objektide arvu valik dropdown menüüks, kus suurim võimalik arv on piiratud vastavalt loitsus määratud
  *      objekti suurusele vastava maksimumiga, aitäh kallis!
+ * 
  * 4.   kontrolli palun viimases skriptis üle, kas medium suurusega objektide puhul näidatakse õiget objektide arvu 
  *      valikut, mul lubab valida kuni 10 objekti, see ei tundu õige (-> fixis vea, medium objekte sai valida kuni 5)
+ * 
  * 5.   täienda koodi nii, et kui rünnak on advantage või disadvantagega, siis kuvatakse rünnaku all mõlemad veeretused
  *      sulgudes (praegu on segadusseajav, et kui rünnak on nt disadvantagega, siis mõnikord kuvatakse suurem veeretus, 
  *      mis peaks tabama, aga ikka ei taba ja vastupidi)
+ * 
  * 6.   lisa väljundi algusse info ka selle kohta, kas rünnakud tehti advantage või disadvantage'ga
+ * 
+ * 7.   väga hea tulemus, aitäh, musi!
+ * 
+ *      ChatGPT
+ *      Thought for 5 seconds
+ *      Pole tänu väärt! Mul on hea meel, et sain aidata. Kui sul on veel küsimusi või vajad abi, anna palun teada!
  */
 
 (async () => {
