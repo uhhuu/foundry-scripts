@@ -32,7 +32,7 @@ async function main() {
         { size: "Huge", hp: 80, ac: 10, str: 18, dex: 6, attackBonus: 8, damageDice: "2d12", damageBonus: 4, countsAs: 8 }
     ];
 
-    // get target data (selected by right-clicking tokens)
+    // get target data (selected by double right-clicking tokens)
     const aTargets = Array.from(game.user.targets);
     if (aTargets.length == 0) {
         ui.notifications.error("No target selected!");
