@@ -70,6 +70,11 @@
  *      seda kontrollitakse vaid juhul kui dialoogis valitakse rünnak 
  *      (sundviske korral ei pea olema mingit sihtmärki)
  * 
+ * Proovisin ilma tükeldamata ka mingit lihtsamat muudatust 
+ *    (et dialoogis oleks alati vaikimisi valitud suurim võimalik arv objekte)
+ *    ka siis läks asi lappama - oluline osa koodist, tulemuste väljastamine, kadus lihtsalt ära
+ *    küll aga toimis viimase puhul konkreetse muudatuse koha küsimine, siis väljastas chatGPT 
+ *    createQuantityOptions funktsioonis vajaliku muudatuse
  *
  **/
 
@@ -165,7 +170,7 @@
   function createQuantityOptions(max) {
     let options = '';
     for (let i = 1; i <= max; i++) {
-      options += `<option value="${i}">${i}</option>`;
+      options += `<option value="${i}" ${i === max ? "selected" : ""}>${i}</option>`;
     }
     return options;
   }
