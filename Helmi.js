@@ -77,6 +77,7 @@ async function main() {
     { name: "Motivational Speech", skillDC: 10, song: 'Bob Marley "Get Up, Stand Up"', overrideScalingMode: "level" },
     { name: "Prayer of Healing", skillDC: 18, song: 'R.E.M "Everybody hurts"' },
     { name: "Protection from Evil and Good ", skillDC: 20, song: '"Amazing Grace"' },
+    { name: "Scrying", skillDC: 20, song: 'Police "Every Breath You Take"' },
     { name: "Seeming", skillDC: 16, song: 'Apelsin "Illusioon"' },
     { name: "Speak with Dead", skillDC: 14, song: 'Cranberries "Zombie"' },
     { name: "Tiny Hut", skillDC: 14, song: 'Lastelaul "Ehitame Maja"' },
